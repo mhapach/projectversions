@@ -1,0 +1,22 @@
+{
+    "name": "mhapach/projectversions",
+    "description": "vcs control of project",
+    "keywords":["laravel","vcs","version","control","project"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mohamed Hapach",
+            "email": "mhapach@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+
+            "mhapach\\ProjectVersions\\": "src/"
+
+        }
+
+    }
+}
