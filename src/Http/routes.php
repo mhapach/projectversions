@@ -17,5 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::group(['namespace' => 'mhapach\ProjectVersions\Http\Controllers', 'prefix' => 'project_versions'], function () {
 
     Route::get('/', 'ProjectVersionsController@index');
+    Route::get('/checkout/{revision}', 'ProjectVersionsController@checkout')->name('project_version.checkout');
+    Route::get('/info', 'ProjectVersionsController@info');
+    Route::get('/new', 'ProjectVersionsController@isNew')->name('project_version.new');
 
 });

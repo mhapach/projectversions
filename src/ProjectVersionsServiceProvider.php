@@ -9,7 +9,9 @@
 namespace mhapach\ProjectVersions;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 use mhapach\ProjectVersions\Console\ProjectVersionsCommit;
+use mhapach\ProjectVersions\Libs\Vcs\BaseVcs;
 
 class ProjectVersionsServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,13 @@ class ProjectVersionsServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole())
             $this->bootForConsole();
+
+        $this->app->singleton('version', function ($app) {
+            $version = BaseVcs::version() ?? 0;
+            View::share('version', $version);
+            return $version;
+        });
+
     }
 
     public function register()

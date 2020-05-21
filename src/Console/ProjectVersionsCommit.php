@@ -123,7 +123,7 @@ class ProjectVersionsCommit extends Command
     private $currentReleaseNumber = 0;
     /** @var int */
     private $currentBuildNumber = 0;
-    /** @var int  - номер ревизии*/
+    /** @var int  - номер ревизии - наш*/
     private $currentRevisionNumber = 0;
     /** @var string */
     private $currentReleaseType = 'Pre-alpha';
@@ -178,6 +178,11 @@ class ProjectVersionsCommit extends Command
         exec($command, $rows, $error);
         dump($rows);
 
+//        // Revision потом понадобиться
+//        $this->appendSvnRevision();
+//        $command = 'svn commit';
+//        exec($command, $rows, $error);
+
         /* копируем trunk в tugs*/
         if(!$error && $this->releaseNumber) {
             $command = 'svn copy ' . env('SVN_PATH') . '/trunk ' .
@@ -205,6 +210,16 @@ class ProjectVersionsCommit extends Command
         file_put_contents($this->projectInfoFile, $content);
 //        print $content;
     }
+
+    /**
+     * Записываем данные в файл
+     * @param array $projectInfo
+     */
+    private function appendSvnRevision()
+    {
+        file_put_contents($this->projectInfoFile, "Revision=".$this->getAfterCommitRevisionNumber(), FILE_APPEND);
+    }
+
 
     /**
      * парсим текущий файл
@@ -285,12 +300,19 @@ class ProjectVersionsCommit extends Command
      */
     private function setRevisionNumber() {
         return ++$this->currentRevisionNumber;
-//        exec("svn info {$this->svnPath}", $rows);
-//        foreach ($rows as $row) if (preg_match('/revision.*?(\d+)/i',$row, $matches)) {
-//            $values = explode(":", $row);
-//            return (int)($values[1] ?? 0);
-//        }
-//        return 0;
+    }
+
+    /**
+     * Запрашиваем  номер ревизии ПОсле комита
+     */
+    private function getAfterCommitRevisionNumber() {
+        $afterCommitSvnRevisionNumber = 0;
+        exec("svn info {$this->svnPath}", $rows);
+        foreach ($rows as $row) if (preg_match('/revision.*?(\d+)/i',$row, $matches)) {
+            $values = explode(":", $row);
+            $afterCommitSvnRevisionNumber = (int)($values[1] ?? 0);
+        }
+        return $afterCommitSvnRevisionNumber;
     }
 
     /**
