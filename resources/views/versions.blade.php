@@ -14,26 +14,26 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="pr-3">
-                            Текущая версия проекта: <span id="version-span">{!! app('version') !!} </span>
+                            {{__('Current version of project')}}: <span id="version-span">{!! app('version') !!} </span>
                         </span>
 
                         <span class="text-danger" id="last-version-message" style="display: none;">
-                            Последняя версия проекта: <span id="last-version-span"></span>
+                            {{__('Last version of project')}}: <span id="last-version-span"></span>
                         </span>
                     </div>
 
                     <div class="card-body">
                         <div class="form-group">
-                            <label for="version">Список последних версий</label>
+                            <label for="version">{{__('List of versions')}}</label>
                             <select name="version_select" id="version-select" class="form-control">
                                 <option value="0">
-                                    Обновить до последней версии
+                                    {{__('Checkout last version')}}
                                 </option>
                                 @if (isset($vcsLogs))
                                     @foreach ($vcsLogs as $vcsLog)
                                         <option value="{!! $vcsLog->revision !!}">
                                             {!! $vcsLog->msg ?: $vcsLog->revision !!} -
-                                            дата({{$vcsLog->date->format('d.m.Y H:i:s')}})
+                                            {{__('date')}} ({{$vcsLog->date->format('d.m.Y H:i:s')}})
                                         </option>
                                     @endforeach
                                 @endif
@@ -44,7 +44,7 @@
 
                     <div class="card-footer">
                         <div class="input-group">
-                            <button class="btn btn-primary" id="checkoutButton">Установить выбранную версию</button>
+                            <button class="btn btn-primary" id="checkoutButton">{{__('Checkout chosen version')}}</button>
                         </div>
                     </div>
                 </div>
@@ -60,26 +60,26 @@
             checkNewVersion();
 
             $('#checkoutButton').on("click", function () {
-                let url = '{{route('project_version.checkout', ['revision' => 0])}}';
+                let url = '{{route('project_versions.checkout', ['revision' => 0])}}';
 
                 if ($('#version-select').val())
                     url = url.replace(/\d+$/, $('#version-select').val());
 
                 $.get(url)
                     .done(function (msg) {
-                        alert('Версия успешно установлена');
+                        alert('{{__('Version successfully installed')}}');
                         $('#version-span').html(msg.version);
                         checkNewVersion();
                         console.log(msg); //
                     })
                     .fail(function (msg) {
-                        alert('Произошла ошибка при установке');
+                        alert('{{__('Checkout error')}}');
                         console.log(msg);
                     });
             });
 
             function checkNewVersion() {
-                url = '{{route('project_version.new')}}';
+                url = '{{route('project_versions.new')}}';
 
                 $.get(url)
                     .done(function (msg) {
@@ -94,7 +94,7 @@
                         }
                     })
                     .fail(function (msg) {
-                        alert('Произошла ошибка при поиске новой версии');
+                        alert('{{__('Error of getting new version')}}');
                         console.log(msg);
                     });
             }

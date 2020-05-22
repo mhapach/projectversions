@@ -89,7 +89,7 @@ class ProjectVersionsCommit extends Command
      *
      * @var string - versionNumber=+1,releaseNumber=2,buildNumber=3,releaseType="Beta",description="Завтра жить мы будем лучше чем вчера"
      */
-    protected $signature = 'commit {p1?} {p2?} {p3?} {p4?} {p5?}';
+    protected $signature = 'pv:commit {p1?} {p2?} {p3?} {p4?} {p5?}';
 
     /** параметры консольного скрипта */
     /** @var string | null */
@@ -113,7 +113,7 @@ class ProjectVersionsCommit extends Command
         'pa' => 'Pre-alpha',
         'a' => 'Alpha',
         'b' => 'Beta',
-        'rc' => 'Release Candidate',
+        'rc' => 'Release-Candidate',
         'r' => 'Release'
     ];
 

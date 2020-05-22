@@ -10,11 +10,46 @@ namespace mhapach\ProjectVersions\Libs\Vcs;
 
 
 use Illuminate\Support\Str;
-use mhapach\ProjectVersions\Models\VcsInfo;
 use mhapach\ProjectVersions\Models\VcsLog;
 
 class Svn extends BaseVcs
 {
+    static $instance = null;
+
+    public static function create(string $url, $login, string $password)
+    {
+        $self = new self($url, $login, $password);
+        return ($self->auth()) ? $self : null;
+    }
+
+    /**
+     * @param $login
+     * @param $password
+     * @return bool
+     */
+    public function auth() {
+        $svnUrl = $this->url;
+        if (strpos($this->url, "/trunk") === false)
+            $svnUrl = $svnUrl . "/trunk";
+
+//        dump("{$this->login}:{$this->password}");
+        $auth = base64_encode("{$this->login}:{$this->password}");
+        $context = stream_context_create([
+            "http" => [
+                "header" => "Authorization: Basic $auth"
+            ]
+        ]);
+
+        try {
+            $versions = file_get_contents($svnUrl, false, $context);
+        }
+        catch(\Exception $e){
+            return false;
+        }
+
+        return (bool)$versions;
+    }
+
     /**
      * @return VcsLog[] | null
      */

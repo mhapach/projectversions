@@ -18,32 +18,29 @@ abstract class BaseVcs
     /** @var string */
     public $url;
 
-    public function __construct(string $url, string $login, string $password)
+    protected function __construct(string $url, string $login, string $password)
     {
         $this->url = $url;
         $this->login = $login;
         $this->password = $password;
     }
 
-    public function logs()
-    {
-    }
+    public static function create(string $url, string $login, string $password){}
 
-    public function checkout(int $revision)
-    {
-    }
+    /** Проверка авризован ли пользователь */
+    public function auth() {}
 
-    public function commit()
-    {
-    }
+    public function logs(){}
+
+    public function checkout(int $revision){}
+
+    public function commit(){}
 
     /**
      * возвращает последнюю версию если есть
      * @return string
      */
-    public function hasNewVersion() : string
-    {
-    }
+    public function hasNewVersion() : string{}
 
     public static function version()
     {

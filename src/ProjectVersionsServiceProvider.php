@@ -21,6 +21,7 @@ class ProjectVersionsServiceProvider extends ServiceProvider
         require_once __DIR__.'/../src/Http/routes.php';
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'projectversions');
+        $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
 
         if ($this->app->runningInConsole())
             $this->bootForConsole();
@@ -77,9 +78,9 @@ class ProjectVersionsServiceProvider extends ServiceProvider
         ], 'swaggermodelgenerator.views');*/
 
         // Publishing the translation files.
-        /*$this->publishes([
+        $this->publishes([
             __DIR__.'/../resources/lang' => resource_path('lang/vendor/mhapach'),
-        ], 'swaggermodelgenerator.views');*/
+        ], 'swaggermodelgenerator.views');
 
         // Registering package commands.
          $this->commands([

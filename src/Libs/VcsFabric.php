@@ -17,15 +17,28 @@ class VcsFabric
     /**
      * @param string $type - ['svn', 'git']
      * @param string $url
-     * @param string|null $login
-     * @param string|null $password
+     * @param string $login
+     * @param string $password
      * @return Git|Svn
      */
-    public static function getInstance(string $type, string $url, string $login = null, string $password = null)
+    public static function getInstance($url, $type = null, $login = null, $password = null)
     {
-        if (strtolower($type) == 'svn')
-            return new Svn($url, $login, $password);
-        else if (strtolower($type) == 'git')
-            return new Git($url, $login, $password);
+        if (!$url)
+            return null;
+
+        if (!$type && strpos($url, 'git') !== false)
+            $type = 'git';
+        else if (!$type && strpos($url, 'svn') !== false)
+            $type = 'svn';
+        elseif (!$type)
+            $type = 'svn';
+
+        $obj = null;
+        if (strtolower($type) == 'svn') {
+            $obj = Svn::create($url, $login ?: '', $password ?: '');
+        } else if (strtolower($type) == 'git')
+            $obj = Git::create($url, $login ?: '', $password ?: '');
+
+        return $obj;
     }
 }

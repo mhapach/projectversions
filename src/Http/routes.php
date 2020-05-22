@@ -14,11 +14,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::group(['namespace' => 'mhapach\ProjectVersions\Http\Controllers', 'prefix' => 'project_versions'], function () {
+Route::group(['middleware' => ['web'], 'namespace' => 'mhapach\ProjectVersions\Http\Controllers', 'prefix' => 'project_versions'], function () {
 
-    Route::get('/', 'ProjectVersionsController@index');
-    Route::get('/checkout/{revision}', 'ProjectVersionsController@checkout')->name('project_version.checkout');
+    Route::get('/login', 'LoginController@index')->name('project_versions.login');
+    Route::post('/login', 'LoginController@login')->name('project_versions.login');
+    Route::get('/', 'ProjectVersionsController@index')->name('project_versions.index');
+    Route::get('/checkout/{revision}', 'ProjectVersionsController@checkout')->name('project_versions.checkout');
     Route::get('/info', 'ProjectVersionsController@info');
-    Route::get('/new', 'ProjectVersionsController@isNew')->name('project_version.new');
+    Route::get('/new', 'ProjectVersionsController@new')->name('project_versions.new');
 
 });
