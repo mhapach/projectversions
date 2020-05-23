@@ -47,23 +47,35 @@ class ProjectVersionsController extends Controller
         ]);
     }
 
+    public function update()
+    {
+        return $this->checkout(0);
+    }
+
     public function checkout(int $revision)
     {
         $this->initVcs();
         if (!$this->vcs)
             return response()->json(['result' => false, "message" => "Unauthorized access to vcs"], 401);
 
+        if (app('project.version') == $this->vcs->getVersionByRevision($revision))
+            return response()->json(['result' => false, 'message' => __('Nothing to update')], 200);
+
         /** @var bool $res */
         $res = $this->vcs->checkout($revision);
         if (!$res)
-            return response()->json(['result' => false], 500);
+            return response()->json(['result' => false, 'message' => 'vcs checkout fault'], 500);
+
+        $res = $this->vcs->runMigrations();
+        if (!$res)
+            return response()->json(['result' => false, 'message' => 'migrations fault'], 500);
         else
-            return response()->json(['result' => true, 'version' => app('version')], 200);
+            return response()->json(['result' => true, 'version' => app('project.version')], 200);
     }
 
     public function info()
     {
-        return response()->json(['result' => app('version')], 200);
+        return response()->json(['result' => app('project.version')], 200);
     }
 
 

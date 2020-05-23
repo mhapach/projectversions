@@ -14,7 +14,7 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="pr-3">
-                            {{__('Current version of project')}}: <span id="version-span">{!! app('version') !!} </span>
+                            {{__('Current version of project')}}: <span id="version-span">{!! app('project.version') !!} </span>
                         </span>
 
                         <span class="text-danger" id="last-version-message" style="display: none;">
@@ -67,9 +67,14 @@
 
                 $.get(url)
                     .done(function (msg) {
-                        alert('{{__('Version successfully installed')}}');
-                        $('#version-span').html(msg.version);
-                        checkNewVersion();
+                        if (msg.hasOwnProperty('result') && msg.result) {
+                            alert('{{__('Version successfully installed')}}');
+                            $('#version-span').html(msg.version);
+                            checkNewVersion();
+                        }
+                        if (msg.hasOwnProperty('result') && !msg.result) {
+                            alert(msg.message);
+                        }
                         console.log(msg); //
                     })
                     .fail(function (msg) {

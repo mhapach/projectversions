@@ -9,6 +9,8 @@
 namespace mhapach\ProjectVersions\Libs\Vcs;
 
 
+use Illuminate\Support\Facades\Artisan;
+
 abstract class BaseVcs
 {
     /** @var string */
@@ -23,6 +25,17 @@ abstract class BaseVcs
         $this->url = $url;
         $this->login = $login;
         $this->password = $password;
+    }
+
+    /**
+     * @return bool
+     */
+    public function runMigrations()
+    {
+        $exitCode = Artisan::call('migrate', array('--path' => 'app/migrations', '--force' => true));
+        if ($exitCode)
+            return false;
+        return true;
     }
 
     public static function create(string $url, string $login, string $password){}

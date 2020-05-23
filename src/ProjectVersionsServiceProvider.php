@@ -8,15 +8,17 @@
 
 namespace mhapach\ProjectVersions;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use mhapach\ProjectVersions\Console\ProjectVersionsCommit;
+use mhapach\ProjectVersions\Http\Controllers\ProjectVersionsController;
 use mhapach\ProjectVersions\Libs\Vcs\BaseVcs;
 
 class ProjectVersionsServiceProvider extends ServiceProvider
 {
 
-    public function boot(){
+    public function boot(Router $router){
 
         require_once __DIR__.'/../src/Http/routes.php';
 
@@ -26,9 +28,9 @@ class ProjectVersionsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole())
             $this->bootForConsole();
 
-        $this->app->singleton('version', function ($app) {
+        $this->app->singleton('project.version', function ($app) {
             $version = BaseVcs::version() ?? 0;
-            View::share('version', $version);
+            View::share('project.version', $version);
             return $version;
         });
 

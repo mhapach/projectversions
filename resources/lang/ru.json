@@ -8,6 +8,7 @@
   "Checkout error": "Произошла ошибка при установке",
   "Error of getting new version":"Произошла ошибка при поиске новой версии",
   "Login": "Логин",
+  "Nothing to update": "Нечего обновлять",
   "date": "дата",
   "Authorisation in VCS": "Авторизация в VCS",
   "Logout": "Выход",

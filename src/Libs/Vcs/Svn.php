@@ -8,7 +8,6 @@
 
 namespace mhapach\ProjectVersions\Libs\Vcs;
 
-
 use Illuminate\Support\Str;
 use mhapach\ProjectVersions\Models\VcsLog;
 
@@ -152,9 +151,39 @@ class Svn extends BaseVcs
             return '';
 
         $res = '';
-        if (strpos($logs[0]->msg, app('version')) === false) {
-            $res = Str::after($logs[0]->msg, 'Version:');
+        if (strpos($logs[0]->msg, app('project.version')) === false) {
+            $res = $this->getVersionFromDescription($logs[0]);
         }
         return trim($res);
+    }
+
+    /**
+     * @param int $revision
+     * @return string
+     */
+    public function getVersionByRevision(int $revision)
+    {
+        $logs = $this->logs();
+        if (empty($logs))
+            return '';
+
+        if (!$revision) {
+            return $this->getVersionFromDescription($logs[0]);
+        }
+
+        foreach ($logs as $log) if ($log->revision == $revision ){
+            return $this->getVersionFromDescription($log);
+        }
+        return '';
+    }
+
+    /**
+     * @param VcsLog $log
+     * @return string
+     */
+    private function getVersionFromDescription(VcsLog $log) {
+        if (!is_string($log->msg) || empty($log->msg))
+            return '';
+        return trim(Str::after($log->msg, 'Version:'));
     }
 }

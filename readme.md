@@ -25,10 +25,14 @@ Set in .env next values
 VCS_PATH=https://github.com/youname/yourproject.git  
 VCS_TYPE=[git|svn]
 ```
-- optional fields - if you will not set it you will be propted to enter you account in Authorisation form for VCS in UI  
+- optional fields   
 ``` bash
+#if you will not set it you will be propted to enter you account in Authorisation form for VCS in UI
 VCS_LOGIN=Yourlogin
 VCS_PASSWORD=YourPassword
+
+#if it true you then access to UI will be through auth middleware, so only authrised users will able to update project 
+VCS_USE_AUTH_MIDDLEWARE=true
 ```
 
 Step 2. Register ProjectVersionsServiceProvider in config/app.php
@@ -40,6 +44,15 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
 ```
 
 ## Usage
+### Use your project version in your code. It's very useful for loading js lib preventing them from caching
+    Example 1 - getting current version number 
+    print  app('project.version');
+    
+    Example 2 - usage within blade code  
+    <link href="{{ asset('css/app.css') }}?v={{app("project.version")}}" rel="stylesheet">
+
+      
+   
 ### Easily increment your version numbers, using Artisan commands
     
     php artisan pv:commit
@@ -86,15 +99,20 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
 ### Rollback at previous project versions or checkout latest commited version.
  It very useful at dev servers where you testing your project and want to make regression testing.
  
-    UI interface address http://yourproject/project_versions  
+    UI interface address 
+    http://yourproject/project_versions  
 
 ### Find out if newest version exists by ajax request - get the json response and use it your javascript 
  
     http://yourproject/project_versions/new  
 
-### Checkout latest version from VCS - get the json response and use it your javascript 
+### Checkout latest VCS version  - get the json response and use it your javascript, this command will update tour project till last version 
  
     http://yourproject/project_versions/checkout/0 
+
+    or just
+ 
+    http://yourproject/project_versions/update 
     
     
 ## Change log
