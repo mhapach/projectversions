@@ -8,7 +8,7 @@
 This package is a Laravel (6.0+) utility which helps you keep and manage your application version, 
 increment version numbers (major, minor, commit), right now we cant not use your last commit hash in version number.
 
-And also there is a UI for version checkout from VCS (only SVN. )
+And also there is a UI for version checkout from VCS (only SVN for a while )
 
 Attention if you use SVN make sure that you have *trunk* folder in your svn path   
 
@@ -31,7 +31,7 @@ VCS_TYPE=[git|svn]
 VCS_LOGIN=Yourlogin
 VCS_PASSWORD=YourPassword
 
-#if it true you then access to UI will be through auth middleware, so only authrised users will able to update project 
+#if it true you then access to UI will be through auth middleware, so only authorised users will able to update project 
 VCS_USE_AUTH_MIDDLEWARE=true
 ```
 
@@ -44,7 +44,7 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
 ```
 
 ## Usage
-### Use your project version in your code. It's very useful for loading js lib preventing them from caching
+### Use project version in your code. It's very useful when you need prevent loading of js of css libs from cache
     Example 1 - getting current version number 
     print  app('project.version');
     
@@ -57,16 +57,17 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
     
     php artisan pv:commit
      
-    Which should commit last changes into VCS and print the new version number in file project.info in root folder of project
+    Which should commit last changes into VCS and print the new version number in file 
+    project.info in root folder of project
     
-    Example of project.info
+    Example of project.info file
     ---------------------------------------
     Project=Laravel
     Description=New build commit
     Date=2020-05-22 01:42:27
     Version=1.1.2.12345-Beta
     
-    Examples of usage artisan commands (attansion run all examples from root folder of project:
+    Examples of usage artisan commands (attention run all examples from root folder of project:
    
     Example 1 (source version 1.1.2.12345-Beta)
     Command: php artisan pv:commit versionNumber (the same as: php artisan pv:commit versionNumber=+1)
@@ -118,12 +119,6 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
 ## Change log
 
 Please see the [changelog](changelog.md) for more information on what has changed recently.
-
-## Testing
-
-``` bash
-$ composer test
-```
 
 ## Contributing
 
