@@ -71,10 +71,13 @@ class Svn extends BaseVcs
             return null;
         $res = null;
         foreach ($array->logentry as $log) {
-            if (!is_string($log->msg))
+            if (!empty($log->msg) && !is_string($log->msg))
                 $log->msg = null;
-            $log->revision = $log->{'@attributes'}->revision;
-            $res[] = new VcsLog($log);
+
+            if(isset($log->{'@attributes'})) {
+                $log->revision = $log->{'@attributes'}->revision;
+                $res[] = new VcsLog($log);
+            }
         }
         return $res;
     }
@@ -182,7 +185,7 @@ class Svn extends BaseVcs
      * @return string
      */
     private function getVersionFromDescription(VcsLog $log) {
-        if (!is_string($log->msg) || empty($log->msg))
+        if (empty($log->msg) || !is_string($log->msg))
             return '';
         return trim(Str::after($log->msg, 'Version:'));
     }
