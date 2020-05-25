@@ -9,6 +9,7 @@
 namespace mhapach\ProjectVersions\Http\Controllers;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use mhapach\ProjectVersions\Libs\Vcs\Svn;
 use mhapach\ProjectVersions\Libs\VcsFabric;
 
@@ -40,10 +41,11 @@ class ProjectVersionsController extends Controller
     {
         $this->initVcs();
         if (!$this->vcs)
-           return redirect(route('project_versions.login'));
+            return redirect(route('project_versions.login'));
 
         return view('projectversions::versions', [
-            "vcsLogs" => $this->vcs->logs()
+            "vcsLogs" => $this->vcs->logs(),
+            "canUpdate" => $this->isUserAllowedCheckout()
         ]);
     }
 
@@ -57,6 +59,9 @@ class ProjectVersionsController extends Controller
         $this->initVcs();
         if (!$this->vcs)
             return response()->json(['result' => false, "message" => "Unauthorized access to vcs"], 401);
+
+        if (!$this->isUserAllowedCheckout())
+            return response()->json(['result' => false, "message" => "You can not make vcs checkout"], 401);
 
         if (app('project.version') == $this->vcs->getVersionByRevision($revision))
             return response()->json(['result' => false, 'message' => __('Nothing to update')], 200);
@@ -87,6 +92,26 @@ class ProjectVersionsController extends Controller
 
         $res = $this->vcs->hasNewVersion();
         return response()->json(['result' => $res], 200);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isUserAllowedCheckout()
+    {
+        $users = [];
+        if (env('VCS_UPDATE_USERS'))
+            $users = explode(",", env('VCS_UPDATE_USERS'));
+
+        if (!empty($users))
+            $users = array_map(function ($value) {
+                return (int)trim($value);
+            }, $users);
+
+        if ((bool)env('VCS_USE_AUTH_MIDDLEWARE') && !empty($users))
+            return in_array(Auth::user()->id, $users);
+        else
+            return true;
     }
 
 }

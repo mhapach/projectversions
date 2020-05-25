@@ -10,7 +10,7 @@ increment version numbers (major, minor, commit), right now we cant not use your
 
 And also there is a UI for version checkout from VCS (only SVN for a while )
 
-Attention if you use SVN make sure that you have *trunk* folder in your svn path   
+Attention if you use SVN make sure that you have *trunk* folder in svn structure   
 
 ## Installation
 
@@ -22,8 +22,9 @@ $ composer require mhapach/projectversions
 Set in .env next values
 - required fields
 ``` bash
-VCS_PATH=https://github.com/youname/yourproject.git  
-VCS_TYPE=[git|svn]
+# it's better to write svn path to root folder of project where are branches tags and trunk exists  
+VCS_PATH=http://svn-server/your-project/  
+VCS_TYPE=svn
 ```
 - optional fields   
 ``` bash
@@ -33,6 +34,9 @@ VCS_PASSWORD=YourPassword
 
 #if it true you then access to UI will be through auth middleware, so only authorised users will able to update project 
 VCS_USE_AUTH_MIDDLEWARE=true
+
+#if VCS_USE_AUTH_MIDDLEWARE is true then in this field enter comma separated ids of users allowed to checkout and update project from VCS  
+VCS_UPDATE_USERS=1,3
 ```
 
 Step 2. Register ProjectVersionsServiceProvider in config/app.php

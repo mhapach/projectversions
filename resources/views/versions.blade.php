@@ -42,11 +42,13 @@
 
                     </div>
 
-                    <div class="card-footer">
-                        <div class="input-group">
-                            <button class="btn btn-primary" id="checkoutButton">{{__('Checkout chosen version')}}</button>
+                    @if ($canUpdate)
+                        <div class="card-footer">
+                            <div class="input-group">
+                                    <button class="btn btn-primary" id="checkoutButton">{{__('Checkout chosen version')}}</button>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
