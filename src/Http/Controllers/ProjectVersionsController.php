@@ -58,10 +58,10 @@ class ProjectVersionsController extends Controller
     {
         $this->initVcs();
         if (!$this->vcs)
-            return response()->json(['result' => false, "message" => "Unauthorized access to vcs"], 401);
+            return response()->json(['result' => false, "message" => __("Unauthorized access to vcs")], 401);
 
         if (!$this->isUserAllowedCheckout())
-            return response()->json(['result' => false, "message" => "You can not make vcs checkout"], 401);
+            return response()->json(['result' => false, "message" => __("You are not authorised to make vcs checkout")], 401);
 
         if (app('project.version') == $this->vcs->getVersionByRevision($revision))
             return response()->json(['result' => false, 'message' => __('Nothing to update')], 200);
@@ -69,11 +69,11 @@ class ProjectVersionsController extends Controller
         /** @var bool $res */
         $res = $this->vcs->checkout($revision);
         if (!$res)
-            return response()->json(['result' => false, 'message' => 'vcs checkout fault'], 500);
+            return response()->json(['result' => false, 'message' => __('Vcs checkout fault')], 500);
 
         $res = $this->vcs->runMigrations();
         if (!$res)
-            return response()->json(['result' => false, 'message' => 'migrations fault'], 500);
+            return response()->json(['result' => false, 'message' => __('Migrations fault')], 500);
         else
             return response()->json(['result' => true, 'version' => app('project.version')], 200);
     }
@@ -88,7 +88,7 @@ class ProjectVersionsController extends Controller
     {
         $this->initVcs();
         if (!$this->vcs)
-            return response()->json(['result' => false, "message" => "Unauthorized access to vcs"], 401);
+            return response()->json(['result' => false, "message" =>  __("Unauthorized access to vcs")], 401);
 
         $res = $this->vcs->hasNewVersion();
         return response()->json(['result' => $res], 200);
