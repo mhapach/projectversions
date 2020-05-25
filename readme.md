@@ -5,8 +5,7 @@
 [![Build Status][ico-travis]][link-travis]
 [![StyleCI][ico-styleci]][link-styleci]
 
-This package is a Laravel (6.0+) utility which helps you keep and manage your application version, 
-increment version numbers (major, minor, commit), right now we cant not use your last commit hash in version number.
+This package is a Laravel (6.0+) utility which helps you keep and manage your project version(increment major, minor version numbers  )
 
 And also there is a UI for version checkout from VCS (only SVN for a while )
 
