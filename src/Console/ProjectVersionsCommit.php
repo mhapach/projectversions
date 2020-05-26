@@ -225,7 +225,7 @@ class ProjectVersionsCommit extends Command
      * парсим текущий файл
      */
     private function parseProjectInfoFile() {
-        $projectInfo = parse_ini_file($this->projectInfoFile);
+        $projectInfo = parse_ini_file($this->projectInfoFile, false, INI_SCANNER_RAW);
         $version = trim($projectInfo['Version'] ?? '');
         if ($version && preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)-(.*)$/', $version, $matches)) {
             $this->currentVersionNumber = $matches[1] ?? 0;
