@@ -28,6 +28,7 @@ Route::group(
         Route::get('/checkout/{revision}', 'ProjectVersionsController@checkout')->name('project_versions.checkout');
         Route::get('/update', 'ProjectVersionsController@update')->name('project_versions.update');
         Route::get('/info', 'ProjectVersionsController@info');
+        Route::get('/version', 'ProjectVersionsController@version');
         Route::get('/new', 'ProjectVersionsController@new')->name('project_versions.new');
 
     }

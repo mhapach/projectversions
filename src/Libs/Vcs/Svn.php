@@ -8,6 +8,7 @@
 
 namespace mhapach\ProjectVersions\Libs\Vcs;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use mhapach\ProjectVersions\Models\VcsLog;
 
@@ -26,7 +27,8 @@ class Svn extends BaseVcs
      * @param $password
      * @return bool
      */
-    public function auth() {
+    public function auth()
+    {
         $svnUrl = $this->url;
         if (strpos($this->url, "/trunk") === false)
             $svnUrl = $svnUrl . "/trunk";
@@ -41,8 +43,7 @@ class Svn extends BaseVcs
 
         try {
             $versions = file_get_contents($svnUrl, false, $context);
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             return false;
         }
 
@@ -50,7 +51,7 @@ class Svn extends BaseVcs
     }
 
     /**
-     * @return VcsLog[] | null
+     * @return VcsLog[]
      */
     public function logs()
     {
@@ -59,26 +60,40 @@ class Svn extends BaseVcs
             $svnUrl = $svnUrl . "/trunk";
 
         /* коммит в текущую ветку */
-        $command = "svn log -g --xml --limit=5 --username={$this->login} --password={$this->password} --search Version: $svnUrl";
-        exec($command, $rows, $error);
+        $command = "svn log --non-interactive -g --xml --username={$this->login} --password={$this->password} "
+            . ($this->isSvnCanSearch() ? "--limit=5 --search Version: " : "--limit=10000 ")
+            . $svnUrl
+            . " 2>&1";
+        $res = exec($command, $rows, $error);
+        if ($error) {
+            $this->errors[] = $res;
+            Log::error($res);
+            return null;
+        }
+
         $xml = implode("\n", $rows);
 //        dd($command, $xml);
 
         $xml = simplexml_load_string($xml);
         $json = json_encode($xml);
         $array = json_decode($json);
+
         if (empty($array->logentry))
             return null;
-        $res = null;
-        foreach ($array->logentry as $log) {
-            if (!empty($log->msg) && !is_string($log->msg))
-                $log->msg = null;
 
-            if(isset($log->{'@attributes'})) {
+        $res = [];
+        foreach ($array->logentry as $log)
+            if (
+                !empty($log->msg)
+                && is_string($log->msg)
+                && stripos($log->msg, "version:") !== false
+                && isset($log->{'@attributes'})
+                && count($res) <= 5
+            ) {
                 $log->revision = $log->{'@attributes'}->revision;
                 $res[] = new VcsLog($log);
             }
-        }
+
         return $res;
     }
 
@@ -101,16 +116,33 @@ class Svn extends BaseVcs
 
         chdir(base_path());
         /* checkout в текущую ветку */
-        $command = "svn checkout --username={$this->login} --password={$this->password} $svnUrl .";
-        exec($command, $rows, $error);
-        if ($error)
+        $command = "svn checkout --non-interactive --username={$this->login} --password={$this->password} $svnUrl . 2>&1";
+        $res = exec($command, $rows, $error);
+//dump($command, $res);
+        if ($error) {
+            $this->errors[] = $res;
+            Log::error($res);
             return false;
+        }
 
-        $command = "svn update " . ($revision ? "-r $revision " : '') . "--username={$this->login} --password={$this->password} --accept theirs-full";
-        exec($command, $rows, $error);
-        if ($error)
+        $command = "svn revert -R --non-interactive --username={$this->login} --password={$this->password} . 2>&1";
+        $res = exec($command, $rows, $error);
+//dump($command, $res);
+        if ($error) {
+            $this->errors[] = $res;
+            Log::error($res);
             return false;
-//        dump($command, $error);
+        }
+
+        $command = "svn update " . ($revision ? "-r $revision " : '') . "--non-interactive --username={$this->login} --password={$this->password} --accept theirs-full . 2>&1";
+        $res = exec($command, $rows, $error);
+//dump($command, $res);
+        if ($error) {
+            $this->errors[] = $res;
+            Log::error($res);
+            return false;
+        }
+
         return true;
     }
 
@@ -124,8 +156,14 @@ class Svn extends BaseVcs
             $svnUrl = $svnUrl . "/trunk";
 
 //        $command = "svn info --xml --username={$this->login} --password={$this->password} $svnUrl";
-        $command = "svn info --xml";
-        exec($command, $rows, $error);
+        $command = "svn info --non-interactive --username={$this->login} --password={$this->password} --xml 2>&1";
+        $res = exec($command, $rows, $error);
+        if ($error) {
+            $this->errors[] = $res;
+            Log::error($res);
+            return null;
+        }
+
         $xml = implode("\n", $rows);
 //        dd($command, $xml);
 
@@ -147,7 +185,7 @@ class Svn extends BaseVcs
      * возвращает последнюю версию
      * @return string
      */
-    public function hasNewVersion() : string
+    public function hasNewVersion(): string
     {
         $logs = $this->logs();
         if (empty($logs))
@@ -174,7 +212,7 @@ class Svn extends BaseVcs
             return $this->getVersionFromDescription($logs[0]);
         }
 
-        foreach ($logs as $log) if ($log->revision == $revision ){
+        foreach ($logs as $log) if ($log->revision == $revision) {
             return $this->getVersionFromDescription($log);
         }
         return '';
@@ -184,9 +222,29 @@ class Svn extends BaseVcs
      * @param VcsLog $log
      * @return string
      */
-    private function getVersionFromDescription(VcsLog $log) {
+    private function getVersionFromDescription(VcsLog $log)
+    {
         if (empty($log->msg) || !is_string($log->msg))
             return '';
         return trim(Str::after($log->msg, 'Version:'));
+    }
+
+    /**
+     * Checking if subversion version is greater then 18 then svn can search
+     * @return bool
+     */
+    private function isSvnCanSearch()
+    {
+        $res = exec("svn --version 2>&1", $rows, $errors);
+        if ($errors)
+            Log::error($res);
+
+        $str = implode("", $rows);
+        preg_match("/svn, version (\d+)\.(\d+)/", $str, $matches);
+        if (!empty($matches)) {
+            $version = (int)($matches[1] ?? 0) . ($matches[2] ?? 0);
+            return ($version >= 18);
+        }
+        return false;
     }
 }

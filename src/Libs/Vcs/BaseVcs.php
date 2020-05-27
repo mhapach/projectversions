@@ -19,6 +19,8 @@ abstract class BaseVcs
     public $password;
     /** @var string */
     public $url;
+    /** @var string[] */
+    public $errors=[];
 
     protected function __construct(string $url, string $login, string $password)
     {
@@ -57,14 +59,20 @@ abstract class BaseVcs
 
     public static function version()
     {
-        $version = 0;
-        if (file_exists(base_path('project.info'))) {
-
-            $projectInfo = parse_ini_file(base_path('project.info'));
-            $version = trim($projectInfo['Version'] ?? '');
-        }
-        return $version;
+        $projectInfo = self::info();
+        return trim($projectInfo['Version'] ?? '');
     }
 
+    /**
+     * @return array
+     */
+    public static function info()
+    {
+        $projectInfo = [];
+        if (file_exists(base_path('project.info')))
+            $projectInfo = parse_ini_file(base_path('project.info'));
+
+        return is_array($projectInfo) ? $projectInfo : [];
+    }
 
 }

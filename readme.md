@@ -13,6 +13,8 @@ Attention if you use SVN make sure that you have *trunk* folder in svn structure
 
 ## Installation
 
+Before install you need to be sure that subversion (svn) installed on your server (better version 1.8 and greater) 
+
 Step 1. Add Eloquent Model Generator to your project via Composer
 
 ``` bash
@@ -111,12 +113,12 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
     http://yourproject/project_versions/new  
 
 ### Checkout latest VCS version  - get the json response and use it your javascript, this command will update tour project till last version 
- 
-    http://yourproject/project_versions/checkout/0 
 
-    or just
- 
     http://yourproject/project_versions/update 
+
+### Get current version of project 
+
+    http://yourproject/project_versions/version
     
     
 ## Change log

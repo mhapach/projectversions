@@ -10,6 +10,7 @@ namespace mhapach\ProjectVersions\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use mhapach\ProjectVersions\Libs\Vcs\BaseVcs;
 use mhapach\ProjectVersions\Libs\Vcs\Svn;
 use mhapach\ProjectVersions\Libs\VcsFabric;
 
@@ -75,10 +76,15 @@ class ProjectVersionsController extends Controller
         if (!$res)
             return response()->json(['result' => false, 'message' => __('Migrations fault')], 500);
         else
-            return response()->json(['result' => true, 'version' => app('project.version')], 200);
+            return response()->json(['result' => true, 'version' => BaseVcs::version()], 200); //exact BaseVcs::version() because app('project.version') is single tone
     }
 
     public function info()
+    {
+        return response()->json(['result' => BaseVcs::info()], 200);
+    }
+
+    public function version()
     {
         return response()->json(['result' => app('project.version')], 200);
     }
