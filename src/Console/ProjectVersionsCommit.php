@@ -151,7 +151,7 @@ class ProjectVersionsCommit extends Command
     {
         $this->getParams();
         if (!$this->svnPath)
-            throw new \Exception('env variable SVN_PATH is absent or empty');
+            throw new \Exception('env variable VCS_PATH is absent or empty');
 
         if (file_exists($this->projectInfoFile)) {
             $this->parseProjectInfoFile();
