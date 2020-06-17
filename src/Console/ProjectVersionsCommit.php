@@ -139,8 +139,6 @@ class ProjectVersionsCommit extends Command
         parent::__construct();
         $this->projectInfoFile = base_path().'/'.$this->projectInfoFile;
         $this->svnPath = env('VCS_PATH') ?? env('SVN_PATH');
-        if (!$this->svnPath)
-            die("VCS_PATH in .env file is empty or absent");
     }
 
     /**
