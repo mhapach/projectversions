@@ -242,6 +242,11 @@ class ProjectVersionsCommit extends Command
         exec($command, $rows, $error);
         if (!empty($error))
             throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+
+        $command = "git push --tags";
+        exec($command, $rows, $error);
+        if (!empty($error))
+            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
     }
 
     private function svn_commit()
