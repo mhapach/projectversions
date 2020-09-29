@@ -1,39 +1,39 @@
 <?php
 
-namespace  mhapach\ProjectVersions\Console;
+namespace mhapach\ProjectVersions\Console;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Console\Command;
 
 /**
  *
-Коммиты в SVN и автоматическое формирование файла файл project.info
-Содержимое файла будет следующим :
-Project: название проекта
-Description: описание сборки
-Date: дата сборки в формате YYYY-MM-DD hh:mm:ss
-Version: A.B.C.D-E
-где
-• A(versionNumber) – главный номер версии (major version number). (изменение дизайна или полная смена логики работы большией части модулей )
-При итерационной смене сбрасывает в ноль buildNumber, releaseNumber, releaseType ставит в pre-alfa
-• B(releaseNumber) – номер релиза - увеличивается после публикации на бою предыдущего
-При итерационной  смене сбрасывает в ноль buildNumber, releaseType ставит в pre-alfa
-• C(buildNumber) – номер сборки, номер логической итерации по работе над функционалом версии A.B (build number). Увеличивается всякий раз когда отдаем продукт в тестирование.
-• D – Номер SVN ревизии
-• E(releaseType) – условное обозначение релиза
-
-Pre-alpha (pa) – соответствует этапу начала работ над версией. Характеризуется большими изменениями в функционале и большим количеством ошибок. Pre-alpha релизы не покидают отдела разработки ПО.
-Alpha(a) – соответствует этапу завершения разработки нового функционала. Начиная с alpha версии новый функционал не разрабатывается, а все заявки на новый функционал уходят в план работ по следующей версии. Этап характеризуется высокой активностью по тестированию внутри подразделения разработки ПО и устранению ошибок.
-Beta (b) – соответствует этапу публичного тестирования. Это первый релиз, который выходит за пределы отдела разработки ПО. На этом этапе принимаются замечания от пользователей по интерфейсу продукта и прочим найденным пользователями ошибкам и неточностям.
-Release Candidate (rc) – весь функционал реализован и полностью оттестирован, все найденные на предыдущих этапах ошибки исправлены. На этом этапе могут вноситься изменения в документацию и конфигурации продукта.
-Release (r) - Релиз служит для индикации того, что ПО соответствует всем требованиям качества, и готово для массового распространения. Не определяет способа доставки релиза (сеть или носитель) и служит лишь для индикации того, что качество достаточно для массового распространения.
-
-Пример файла product.info:
-Project: erlvi
-Description: new pre-alfa build of erlvi project
-Date: 2018-12-27 17:27:41
-Version: 1.0.1.23455-Pre-Alfa
-
+ * Коммиты в SVN и автоматическое формирование файла файл project.info
+ * Содержимое файла будет следующим :
+ * Project: название проекта
+ * Description: описание сборки
+ * Date: дата сборки в формате YYYY-MM-DD hh:mm:ss
+ * Version: A.B.C.D-E
+ * где
+ * • A(versionNumber) – главный номер версии (major version number). (изменение дизайна или полная смена логики работы большией части модулей )
+ * При итерационной смене сбрасывает в ноль buildNumber, releaseNumber, releaseType ставит в pre-alfa
+ * • B(releaseNumber) – номер релиза - увеличивается после публикации на бою предыдущего
+ * При итерационной  смене сбрасывает в ноль buildNumber, releaseType ставит в pre-alfa
+ * • C(buildNumber) – номер сборки, номер логической итерации по работе над функционалом версии A.B (build number). Увеличивается всякий раз когда отдаем продукт в тестирование.
+ * • D – Номер SVN ревизии
+ * • E(releaseType) – условное обозначение релиза
+ *
+ * Pre-alpha (pa) – соответствует этапу начала работ над версией. Характеризуется большими изменениями в функционале и большим количеством ошибок. Pre-alpha релизы не покидают отдела разработки ПО.
+ * Alpha(a) – соответствует этапу завершения разработки нового функционала. Начиная с alpha версии новый функционал не разрабатывается, а все заявки на новый функционал уходят в план работ по следующей версии. Этап характеризуется высокой активностью по тестированию внутри подразделения разработки ПО и устранению ошибок.
+ * Beta (b) – соответствует этапу публичного тестирования. Это первый релиз, который выходит за пределы отдела разработки ПО. На этом этапе принимаются замечания от пользователей по интерфейсу продукта и прочим найденным пользователями ошибкам и неточностям.
+ * Release Candidate (rc) – весь функционал реализован и полностью оттестирован, все найденные на предыдущих этапах ошибки исправлены. На этом этапе могут вноситься изменения в документацию и конфигурации продукта.
+ * Release (r) - Релиз служит для индикации того, что ПО соответствует всем требованиям качества, и готово для массового распространения. Не определяет способа доставки релиза (сеть или носитель) и служит лишь для индикации того, что качество достаточно для массового распространения.
+ *
+ * Пример файла product.info:
+ * Project: erlvi
+ * Description: new pre-alfa build of erlvi project
+ * Date: 2018-12-27 17:27:41
+ * Version: 1.0.1.23455-Pre-Alfa
  *
  * Примеры использования(внимание все примеры запускать только из корневой папки проекта):
  * Пример 1 (исходная версия 1.1.2.12345-Beta)
@@ -104,11 +104,18 @@ class ProjectVersionsCommit extends Command
     protected $description = 'New build commit';
 
     /** Служебные */
+    /** @var array */
+    private $projectInfo;
+
     /** @var string */
     private $projectInfoFile = 'project.info';
-    /** @var string  */
-    private $svnPath = '';
-    /** @var array  */
+
+    /** @var string */
+    private $vcsPath;
+    /** @var string */
+    private $vcsType;
+
+    /** @var array */
     private $releaseTypes = [
         'pa' => 'Pre-alpha',
         'a' => 'Alpha',
@@ -119,11 +126,11 @@ class ProjectVersionsCommit extends Command
 
     /** @var int */
     private $currentVersionNumber = 0;
-    /** @var int*/
+    /** @var int */
     private $currentReleaseNumber = 0;
     /** @var int */
     private $currentBuildNumber = 0;
-    /** @var int  - номер ревизии - наш*/
+    /** @var int  - номер ревизии - наш */
     private $currentRevisionNumber = 0;
     /** @var string */
     private $currentReleaseType = 'Pre-alpha';
@@ -137,21 +144,22 @@ class ProjectVersionsCommit extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->projectInfoFile = base_path().'/'.$this->projectInfoFile;
-        $this->svnPath = env('VCS_PATH') ?? env('SVN_PATH');
+        $this->projectInfoFile = base_path() . '/' . $this->projectInfoFile;
+        $this->vcsPath = env('VCS_PATH') ?? env('SVN_PATH');
+        $this->vcsType = strtolower(config('settings.vcs_type', 'git'));
     }
 
     /**
      * Execute the console command.
      *
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle()
     {
         $this->getParams();
-        if (!$this->svnPath)
-            throw new \Exception('env variable VCS_PATH is absent or empty');
+        if (!$this->vcsPath)
+            throw new Exception('env variable VCS_PATH is absent or empty');
 
         if (file_exists($this->projectInfoFile)) {
             $this->parseProjectInfoFile();
@@ -159,20 +167,87 @@ class ProjectVersionsCommit extends Command
 
         $this->initInputParams();
 
-        if(($this->releaseNumber || $this->currentVersionNumber) && !$this->isTrunkBranch())
-            throw new \Exception("Current branch must be trunk if you want to make release tag");
+        if (($this->releaseNumber || $this->currentVersionNumber) && !$this->isMasterBranch())
+            if ($this->vcsType == 'svn')
+                throw new Exception("Current SVN branch must be trunk if you want to make release tag");
+            else
+                throw new Exception("Current GIT branch must be master or main if you want to make release tag");
 
-        $projectInfo['Project'] = config('app.name');
-        $projectInfo['Description'] = (string)$this->description;
-        $projectInfo['Date'] = (new Carbon())->toDateTimeString();
-        $projectInfo['Version'] = $this->makeVersion();
-        $this->description .= ". Version: {$projectInfo['Version']}";
+        $this->projectInfo['Project'] = config('app.name');
+        $this->projectInfo['Description'] = (string)$this->description;
+        $this->projectInfo['Date'] = (new Carbon())->toDateTimeString();
+        $this->projectInfo['Version'] = $this->makeVersion();
+        $this->description .= ". Version: {$this->projectInfo['Version']}";
 
-        //Запись в файл producn.info  тут, инчае не попадет в коммит
-        $this->saveProjectInfoFile($projectInfo);
+        //Запись в файл product.info тут, инчае не попадет в коммит
+        $this->saveProjectInfoFile();
+
+        $this->commit();
+
+        return true;
+    }
+
+    /**
+     * @return Exception|void
+     * @throws Exception
+     */
+    private function commit()
+    {
+        $methodName = "{$this->vcsType}_commit";
+        if ($this->vcsType == 'svn') {
+            return $this->svn_commit();
+        } else if ($this->vcsType == 'git') {
+            return $this->git_commit();
+        } else
+            return new Exception("No such VCS method {$methodName}");
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function git_commit()
+    {
+        /** @var string $currentBranch */
+        $currentBranch = null;
+
+        //Проверяем текущая ветка master или main
+        $command = 'git branch --show-current';
+        exec($command, $rows, $error);
+        if (empty($error))
+            $currentBranch = trim(current($rows));
+
+        if (!$currentBranch)
+            throw new Exception("Current branch is empty");
+
+        if (!in_array($currentBranch, ['master', 'main']))
+            throw new Exception("Current branch have to be master or main");
 
         /* коммит в текущую ветку */
-        $command = 'svn commit -m "'.$this->description.'"';
+        $command = 'git add ./';
+        exec($command, $rows, $error);
+        if (!empty($error))
+            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+
+        $command = 'git commit -m "' . $this->description . '"';
+        exec($command, $rows, $error);
+        if (!empty($error))
+            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+
+        $command = "git push -u origin $currentBranch";
+        exec($command, $rows, $error);
+        if (!empty($error))
+            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+
+        $command = "git tag {$this->projectInfo['Version']}";
+        exec($command, $rows, $error);
+        if (!empty($error))
+            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+    }
+
+    private function svn_commit()
+    {
+        /* коммит в текущую ветку */
+        $command = 'svn commit -m "' . $this->description . '"';
         exec($command, $rows, $error);
         dump($rows);
 
@@ -182,28 +257,26 @@ class ProjectVersionsCommit extends Command
 //        exec($command, $rows, $error);
 
         /* копируем trunk в tugs*/
-        if(!$error && $this->releaseNumber) {
+        if (!$error && $this->releaseNumber) {
             $command = 'svn copy ' . env('SVN_PATH') . '/trunk ' .
-                env('SVN_PATH') . '/tags/' . $projectInfo['Version'].
+                env('SVN_PATH') . '/tags/' . $this->projectInfo['Version'] .
                 ' -m "' . $this->description . '"';
             exec($command, $rows);
             dump($rows);
         }
-
     }
 
     /**
      * Записываем данные в файл
-     * @param array $projectInfo
      */
-    private function saveProjectInfoFile(array $projectInfo)
+    private function saveProjectInfoFile()
     {
-        if (empty($projectInfo))
+        if (empty($this->projectInfo))
             return;
 
         $content = '';
-        foreach($projectInfo as $key => $value) {
-            $content.="$key=$value\n";
+        foreach ($this->projectInfo as $key => $value) {
+            $content .= "$key=$value\n";
         }
         file_put_contents($this->projectInfoFile, $content);
 //        print $content;
@@ -211,20 +284,21 @@ class ProjectVersionsCommit extends Command
 
     /**
      * Записываем данные в файл
-     * @param array $projectInfo
+     * @param array $this ->projectInfo
      */
-    private function appendSvnRevision()
-    {
-        file_put_contents($this->projectInfoFile, "Revision=".$this->getAfterCommitRevisionNumber(), FILE_APPEND);
-    }
+//    private function appendSvnRevision()
+//    {
+//        file_put_contents($this->projectInfoFile, "Revision=" . $this->getAfterCommitRevisionNumber(), FILE_APPEND);
+//    }
 
 
     /**
      * парсим текущий файл
      */
-    private function parseProjectInfoFile() {
-        $projectInfo = parse_ini_file($this->projectInfoFile, false, INI_SCANNER_RAW);
-        $version = trim($projectInfo['Version'] ?? '');
+    private function parseProjectInfoFile()
+    {
+        $this->projectInfo = parse_ini_file($this->projectInfoFile, false, INI_SCANNER_RAW);
+        $version = trim($this->projectInfo['Version'] ?? '');
         if ($version && preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)-(.*)$/', $version, $matches)) {
             $this->currentVersionNumber = $matches[1] ?? 0;
             $this->currentReleaseNumber = $matches[2] ?? 0;
@@ -238,15 +312,17 @@ class ProjectVersionsCommit extends Command
      * Формируем строку версии
      * @return string
      */
-    private function makeVersion() {
+    private function makeVersion()
+    {
         return "{$this->currentVersionNumber}.{$this->currentReleaseNumber}.{$this->currentBuildNumber}.{$this->currentRevisionNumber}-{$this->currentReleaseType}";
     }
 
     /**
      * инициализируем параметры
-     * @return string
+     * @return void
      */
-    private function initInputParams() {
+    private function initInputParams()
+    {
         if (isset($this->versionNumber))
             $this->currentVersionNumber = $this->versionNumber === '+1' ? ++$this->currentVersionNumber : $this->versionNumber;
         //Если увеличиваем версию то сброс нижестоящих
@@ -296,37 +372,51 @@ class ProjectVersionsCommit extends Command
     /**
      * Запрашиваем  текущий номер ревизии
      */
-    private function setRevisionNumber() {
+    private function setRevisionNumber()
+    {
         return ++$this->currentRevisionNumber;
     }
 
-    /**
-     * Запрашиваем  номер ревизии ПОсле комита
-     */
-    private function getAfterCommitRevisionNumber() {
-        $afterCommitSvnRevisionNumber = 0;
-        exec("svn info {$this->svnPath}", $rows);
-        foreach ($rows as $row) if (preg_match('/revision.*?(\d+)/i',$row, $matches)) {
-            $values = explode(":", $row);
-            $afterCommitSvnRevisionNumber = (int)($values[1] ?? 0);
-        }
-        return $afterCommitSvnRevisionNumber;
-    }
+//    /**
+//     * Запрашиваем  номер ревизии ПОсле комита
+//     */
+//    private function getAfterCommitRevisionNumber()
+//    {
+//        $afterCommitSvnRevisionNumber = 0;
+//        exec("svn info {$this->vcsPath}", $rows);
+//        foreach ($rows as $row) if (preg_match('/revision.*?(\d+)/i', $row, $matches)) {
+//            $values = explode(":", $row);
+//            $afterCommitSvnRevisionNumber = (int)($values[1] ?? 0);
+//        }
+//        return $afterCommitSvnRevisionNumber;
+//    }
 
     /**
+     * Проверяем текущая ветка master или main для git-a или папка trunk Для svn
      * @return bool
      */
-    private function isTrunkBranch() {
-        $command = 'svn info --show-item url';
-        exec($command, $rows);
-        if (!empty($rows) && preg_match('/trunk$/', current($rows)))
-            return true;
+    private function isMasterBranch()
+    {
+        if (config('settings.vcs_type') == 'svn') {
+            $command = 'svn info --show-item url';
+            exec($command, $rows);
+            if (!empty($rows) && preg_match('/trunk$/', current($rows)))
+                return true;
+        } else {
+            $command = 'git branch --show-current';
+            exec($command, $rows, $error);
+            if (empty($error)) {
+                $currentBranch = trim(current($rows));
+                return in_array($currentBranch, ['master', 'main']);
+            }
+        }
 
         return false;
     }
 
     /**
-     * Получаем параметры именно потому что наличие не инициализированного параметра говорит о том что надо сделать инкременет
+     * Получаем параметры из консольной коммандной строки:
+     * наличие не инициализированного параметра говорит о том, что надо сделать инкременет
      */
     private function getParams()
     {
@@ -336,15 +426,16 @@ class ProjectVersionsCommit extends Command
                 $params = explode(',', $value);
                 foreach ($params as $param) {
                     $keyVal = explode('=', $param);
-                    $key = array_shift ($keyVal);
-                    $val = array_shift ($keyVal);
+                    $key = array_shift($keyVal);
+                    $val = array_shift($keyVal);
                     if (property_exists($this, $key)) {
                         $this->$key = isset($val) ? $val : '+1';
-                        $res[]="$key = {$this->$key}";
+                        $res[] = "$key = {$this->$key}";
                     }
                 }
             }
         }
+        return $res;
     }
 
 }
