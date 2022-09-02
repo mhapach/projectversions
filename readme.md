@@ -68,7 +68,7 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
 ####   Example of project.info file
     ---
     {
-        "Project": "Экосистема СРО",
+        "Project": "Your megaproject",
         "Description": "New build commit",
         "Date": "2022-09-02 11:42:09",
         "Version": "1.1.2.12345"
