@@ -7,13 +7,13 @@
 
 This package is a Laravel (6.0+) utility which helps you keep and manage your project version(increment major, minor version numbers  )
 
-And also there is a UI for version checkout from VCS (only SVN for a while )
+And also there is a UI for version checkout from VCS (only git based for a while )
 
 Attention if you use SVN make sure that you have *trunk* folder in svn structure   
 
 ## Installation
 
-Before install you need to be sure that subversion (svn) installed on your server (better version 1.8 and greater) 
+Before install you need to be sure that git installed on your host 
 
 Step 1. Add Eloquent Model Generator to your project via Composer
 
@@ -24,8 +24,8 @@ Set in .env next values
 - required fields
 ``` bash
 # it's better to write svn path to root folder of project where are branches tags and trunk exists  
-VCS_PATH=http://svn-server/your-project/  
-VCS_TYPE=svn
+VCS_PATH=http://git-server/your-project/  
+VCS_TYPE=git
 ```
 - optional fields   
 ``` bash
