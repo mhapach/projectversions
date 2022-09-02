@@ -117,6 +117,7 @@ class ProjectVersionsCommit extends Command
 
     /** @var array */
     private $releaseTypes = [
+        '' => '',
         'pa' => 'Pre-alpha',
         'a' => 'Alpha',
         'b' => 'Beta',
@@ -195,17 +196,17 @@ class ProjectVersionsCommit extends Command
     {
         $methodName = "{$this->vcsType}_commit";
         if ($this->vcsType == 'svn') {
-            return $this->svn_commit();
+            $this->svn_commit();
         } else if ($this->vcsType == 'git') {
-            return $this->git_commit();
+            $this->git_commit();
         } else
-            return new Exception("No such VCS method {$methodName}");
+            return new Exception("No such VCS method $methodName");
     }
 
     /**
      * @throws Exception
      */
-    private function git_commit()
+    private function git_commit(): void
     {
         /** @var string $currentBranch */
         $currentBranch = null;
@@ -226,27 +227,27 @@ class ProjectVersionsCommit extends Command
         $command = 'git add ./';
         exec($command, $rows, $error);
         if (!empty($error))
-            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+            throw new Exception("Error status $error.\n Execution of  $command error: " . implode("\n", $rows));
 
         $command = 'git commit -m "' . $this->description . '"';
         exec($command, $rows, $error);
         if (!empty($error))
-            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+            throw new Exception("Error status $error.\n Execution of  $command error: " . implode("\n", $rows));
 
         $command = "git push -u origin $currentBranch";
         exec($command, $rows, $error);
         if (!empty($error))
-            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+            throw new Exception("Error status $error.\n Execution of  $command error: " . implode("\n", $rows));
 
         $command = "git tag {$this->projectInfo['Version']}";
         exec($command, $rows, $error);
         if (!empty($error))
-            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+            throw new Exception("Error status $error.\n Execution of  $command error: " . implode("\n", $rows));
 
         $command = "git push --tags";
         exec($command, $rows, $error);
         if (!empty($error))
-            throw new Exception("Error status {$error}.\n Execution of  $command error: " . implode("\n", $rows));
+            throw new Exception("Error status $error.\n Execution of  $command error: " . implode("\n", $rows));
     }
 
     private function svn_commit()
@@ -274,16 +275,17 @@ class ProjectVersionsCommit extends Command
     /**
      * Записываем данные в файл
      */
-    private function saveProjectInfoFile()
+    private function saveProjectInfoFile(): void
     {
         if (empty($this->projectInfo))
             return;
 
-        $content = '';
-        foreach ($this->projectInfo as $key => $value) {
-            $content .= "$key=$value\n";
-        }
-        file_put_contents($this->projectInfoFile, $content);
+//        $content = '';
+//        foreach ($this->projectInfo as $key => $value) {
+//            $content .= "$key=$value\n";
+//        }
+
+        file_put_contents($this->projectInfoFile, json_encode($this->projectInfo, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 //        print $content;
     }
 
@@ -300,16 +302,25 @@ class ProjectVersionsCommit extends Command
     /**
      * парсим текущий файл
      */
-    private function parseProjectInfoFile()
+    private function parseProjectInfoFile(): void
     {
-        $this->projectInfo = parse_ini_file($this->projectInfoFile, false, INI_SCANNER_RAW);
-        $version = trim($this->projectInfo['Version'] ?? '');
-        if ($version && preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)-(.*)$/', $version, $matches)) {
-            $this->currentVersionNumber = $matches[1] ?? 0;
-            $this->currentReleaseNumber = $matches[2] ?? 0;
-            $this->currentBuildNumber = $matches[3] ?? 0;
-            $this->currentRevisionNumber = $matches[4] ?? 0;
-            $this->currentReleaseType = $matches[5] ?? $this->currentReleaseType;
+        if (file_exists($this->projectInfoFile)) {
+            try {
+                $this->projectInfo = parse_ini_file($this->projectInfoFile, false, INI_SCANNER_RAW);
+            } catch (Exception $e) {
+            }
+
+            if (!$this->projectInfo)
+                $this->projectInfo = json_decode(file_get_contents($this->projectInfoFile), true);
+
+            $version = trim($this->projectInfo['Version'] ?? '');
+            if ($version && preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)-?(.*)$/', $version, $matches)) {
+                $this->currentVersionNumber = $matches[1] ?? 0;
+                $this->currentReleaseNumber = $matches[2] ?? 0;
+                $this->currentBuildNumber = $matches[3] ?? 0;
+                $this->currentRevisionNumber = $matches[4] ?? 0;
+                $this->currentReleaseType = $matches[5] ?? $this->currentReleaseType;
+            }
         }
     }
 
@@ -317,9 +328,12 @@ class ProjectVersionsCommit extends Command
      * Формируем строку версии
      * @return string
      */
-    private function makeVersion()
+    private function makeVersion(): string
     {
-        return "{$this->currentVersionNumber}.{$this->currentReleaseNumber}.{$this->currentBuildNumber}.{$this->currentRevisionNumber}-{$this->currentReleaseType}";
+        $res = "$this->currentVersionNumber.$this->currentReleaseNumber.$this->currentBuildNumber.$this->currentRevisionNumber";
+        if ($this->currentReleaseType)
+            $res .= "-$this->currentReleaseType";
+        return $res;
     }
 
     /**
@@ -334,7 +348,6 @@ class ProjectVersionsCommit extends Command
         if ($this->versionNumber === '+1') {
             $this->releaseNumber = 0;
             $this->buildNumber = 0;
-            $this->currentRevisionNumber = 0;
             $this->releaseType = reset($this->releaseTypes);
             $this->currentRevisionNumber = 0;
         }
@@ -364,22 +377,24 @@ class ProjectVersionsCommit extends Command
      * @param string $type
      * @return mixed
      */
-    private function getNextReleaseType(string $type)
+    private function getNextReleaseType(string $type) : string
     {
         $types = array_values($this->releaseTypes);
         $i = array_search($type, $types);
-        if (isset($i))
-            return ($i != (count($types) - 1)) ? $types[++$i] : $types[$i];
+        $res = "";
+        if ($i !== false)
+            $res = ($i != (count($types) - 1)) ? $types[++$i] : $types[$i];
         else
-            return reset($this->releaseTypes);
+            $res = reset($this->releaseTypes);
+        return $res;
     }
 
     /**
      * Запрашиваем  текущий номер ревизии
      */
-    private function setRevisionNumber()
+    private function setRevisionNumber(): void
     {
-        return ++$this->currentRevisionNumber;
+        ++$this->currentRevisionNumber;
     }
 
 //    /**
@@ -400,7 +415,7 @@ class ProjectVersionsCommit extends Command
      * Проверяем текущая ветка master или main для git-a или папка trunk Для svn
      * @return bool
      */
-    private function isMasterBranch()
+    private function isMasterBranch(): bool
     {
         if (config('settings.vcs_type') == 'svn') {
             $command = 'svn info --show-item url';
@@ -423,10 +438,10 @@ class ProjectVersionsCommit extends Command
      * Получаем параметры из консольной коммандной строки:
      * наличие не инициализированного параметра говорит о том, что надо сделать инкременет
      */
-    private function getParams()
+    private function getParams(): void
     {
-        $res = [];
-        foreach ($this->argument() as $argument => $value) {
+//        $res = [];
+        foreach ($this->argument() as $value) {
             if ($value) {
                 $params = explode(',', $value);
                 foreach ($params as $param) {
@@ -434,13 +449,11 @@ class ProjectVersionsCommit extends Command
                     $key = array_shift($keyVal);
                     $val = array_shift($keyVal);
                     if (property_exists($this, $key)) {
-                        $this->$key = isset($val) ? $val : '+1';
-                        $res[] = "$key = {$this->$key}";
+                        $this->$key = $val ?? '+1';
+//                        $res[] = "$key = {$this->$key}";
                     }
                 }
             }
         }
-        return $res;
     }
-
 }

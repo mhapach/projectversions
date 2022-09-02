@@ -20,7 +20,7 @@ abstract class BaseVcs
     /** @var string */
     public $url;
     /** @var string[] */
-    public $errors=[];
+    public $errors = [];
 
     protected function __construct(string $url, string $login, string $password)
     {
@@ -40,22 +40,34 @@ abstract class BaseVcs
         return true;
     }
 
-    public static function create(string $url, string $login, string $password){}
+    public static function create(string $url, string $login, string $password)
+    {
+    }
 
     /** Проверка авризован ли пользователь */
-    public function auth() {}
+    public function auth()
+    {
+    }
 
-    public function logs(){}
+    public function logs()
+    {
+    }
 
-    public function checkout(int $revision){}
+    public function checkout(int $revision)
+    {
+    }
 
-    public function commit(){}
+    public function commit()
+    {
+    }
 
     /**
      * возвращает последнюю версию если есть
      * @return string
      */
-    public function hasNewVersion() : string{}
+    public function hasNewVersion(): string
+    {
+    }
 
     public static function version()
     {
@@ -69,8 +81,11 @@ abstract class BaseVcs
     public static function info()
     {
         $projectInfo = [];
+//        if (file_exists(base_path('project.info')))
+//            $projectInfo = parse_ini_file(base_path('project.info'));
+
         if (file_exists(base_path('project.info')))
-            $projectInfo = parse_ini_file(base_path('project.info'));
+            $projectInfo = json_decode(file_get_contents(base_path('project.info')), true);
 
         return is_array($projectInfo) ? $projectInfo : [];
     }

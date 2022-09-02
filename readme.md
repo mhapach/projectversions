@@ -65,14 +65,16 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
     Which should commit last changes into VCS and print the new version number in file 
     project.info in root folder of project
     
-    Example of project.info file
-    ---------------------------------------
-    Project=Laravel
-    Description=New build commit
-    Date=2020-05-22 01:42:27
-    Version=1.1.2.12345-Beta
+####   Example of project.info file
+    ---
+    {
+        "Project": "Экосистема СРО",
+        "Description": "New build commit",
+        "Date": "2022-09-02 11:42:09",
+        "Version": "1.1.2.12345"
+    }
     
-    Examples of usage artisan commands (attention run all examples from root folder of project:
+#### Examples of usage artisan commands (attention run all examples from root folder of project:
    
     Example 1 (source version 1.1.2.12345-Beta)
     Command: php artisan pv:commit versionNumber (the same as: php artisan pv:commit versionNumber=+1)
