@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 /**
  *
- * Коммиты в SVN и автоматическое формирование файла файл project.info
+ * Коммиты и автоматическое формирование файла файл project.info
  * Содержимое файла будет следующим :
  * Project: название проекта
  * Description: описание сборки
@@ -16,11 +16,11 @@ use Illuminate\Console\Command;
  * Version: A.B.C.D-E
  * где
  * • A(versionNumber) – главный номер версии (major version number). (изменение дизайна или полная смена логики работы большией части модулей )
- * При итерационной смене сбрасывает в ноль buildNumber, releaseNumber, releaseType ставит в pre-alfa
+ * При итерационной смене сбрасывает в ноль buildNumber, releaseNumber, releaseType ставит в пустое значение
  * • B(releaseNumber) – номер релиза - увеличивается после публикации на бою предыдущего
  * При итерационной  смене сбрасывает в ноль buildNumber, releaseType ставит в pre-alfa
  * • C(buildNumber) – номер сборки, номер логической итерации по работе над функционалом версии A.B (build number). Увеличивается всякий раз когда отдаем продукт в тестирование.
- * • D – Номер SVN ревизии
+ * • D – Номер ревизии - обычный инкремент в нашем случае
  * • E(releaseType) – условное обозначение релиза
  *
  * Pre-alpha (pa) – соответствует этапу начала работ над версией. Характеризуется большими изменениями в функционале и большим количеством ошибок. Pre-alpha релизы не покидают отдела разработки ПО.
@@ -30,8 +30,7 @@ use Illuminate\Console\Command;
  * Release (r) - Релиз служит для индикации того, что ПО соответствует всем требованиям качества, и готово для массового распространения. Не определяет способа доставки релиза (сеть или носитель) и служит лишь для индикации того, что качество достаточно для массового распространения.
  *
  * Пример файла product.info:
- * Project: erlvi
- * Description: new pre-alfa build of erlvi project
+ * Description: new pre-alfa build
  * Date: 2018-12-27 17:27:41
  * Version: 1.0.1.23455-Pre-Alfa
  *
@@ -172,7 +171,7 @@ class ProjectVersionsCommit extends Command
             if ($this->vcsType == 'svn')
                 throw new Exception("Current SVN branch must be trunk if you want to make release tag");
             else
-                throw new Exception("Current GIT branch must be master or main if you want to make release tag");
+                throw new Exception("Current GIT branch must contain master or main if you want to make release tag");
 
         $this->projectInfo['Project'] = config('app.name');
         $this->projectInfo['Description'] = (string)$this->description;
@@ -220,8 +219,8 @@ class ProjectVersionsCommit extends Command
         if (!$currentBranch)
             throw new Exception("Current branch is empty");
 
-        if (!in_array($currentBranch, ['master', 'main']))
-            throw new Exception("Current branch have to be master or main");
+        if (!preg_match('/master|main/i', $currentBranch))
+            throw new Exception("Current branch must contain master or main");
 
         /* коммит в текущую ветку */
         $command = 'git add ./';
@@ -427,7 +426,8 @@ class ProjectVersionsCommit extends Command
             exec($command, $rows, $error);
             if (empty($error)) {
                 $currentBranch = trim(current($rows));
-                return in_array($currentBranch, ['master', 'main']);
+//                return in_array($currentBranch, ['master', 'main']);
+                return preg_match('/master|main/i', $currentBranch);
             }
         }
 
