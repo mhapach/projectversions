@@ -11,6 +11,7 @@ namespace mhapach\ProjectVersions;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use mhapach\ProjectVersions\Console\ProjectVersionsArchive;
 use mhapach\ProjectVersions\Console\ProjectVersionsCommit;
 use mhapach\ProjectVersions\Http\Controllers\ProjectVersionsController;
 use mhapach\ProjectVersions\Libs\Vcs\BaseVcs;
@@ -86,7 +87,8 @@ class ProjectVersionsServiceProvider extends ServiceProvider
 
         // Registering package commands.
          $this->commands([
-             ProjectVersionsCommit::class
+             ProjectVersionsCommit::class,
+             ProjectVersionsArchive::class
          ]);
     }
 }
