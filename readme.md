@@ -5,11 +5,9 @@
 [![Build Status][ico-travis]][link-travis]
 [![StyleCI][ico-styleci]][link-styleci]
 
-This package is a Laravel (6.0+) utility which helps you keep and manage your project version(increment major, minor version numbers  )
+This package is a Laravel (7.0+) utility which helps you keep and manage your project version(increment major, minor version numbers  )
 
 And also there is a UI for version checkout from VCS (only git based for a while )
-
-Attention if you use SVN make sure that you have *trunk* folder in svn structure   
 
 ## Installation
 
@@ -21,11 +19,6 @@ Step 1. Add Eloquent Model Generator to your project via Composer
 $ composer require mhapach/projectversions
 ```
 Set in .env next values
-- required fields
-``` bash
-# it's better to write svn path to root folder of project where are branches tags and trunk exists  
-VCS_PATH=http://git-server/your-project/  
-VCS_TYPE=git
 ```
 - optional fields   
 ``` bash
@@ -64,6 +57,23 @@ Step 2. Register ProjectVersionsServiceProvider in config/app.php
      
     Which should commit last changes into VCS and print the new version number in file 
     project.info in root folder of project
+
+### Make diff zip archive between to commits or using number of last commits 
+    
+    php artisan pv:archive --help 
+    Shows you arguments and options of command pv:archive
+
+    Example 1 - make zip archive between to commits
+    php artisan pv:archive commit_hash1 commit_hash2
+
+    Example 2 - make zip archive for last 10 commits
+    php artisan pv:archive -s 10
+
+    Example 3 - make zip archive for last 10 commits and specify path of archive file
+    php artisan pv:archive -s 10 -p storage/app/git_archives 
+    or 
+    php artisan pv:archive --shift=10 --path=storage/app/git_archives
+
     
 ####   Example of project.info file
     ---

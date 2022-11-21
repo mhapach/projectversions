@@ -110,8 +110,6 @@ class ProjectVersionsCommit extends Command
     private $projectInfoFile = 'project.info';
 
     /** @var string */
-    private $vcsPath;
-    /** @var string */
     private $vcsType;
 
     /** @var array */
@@ -133,7 +131,7 @@ class ProjectVersionsCommit extends Command
     /** @var int  - номер ревизии - наш */
     private $currentRevisionNumber = 0;
     /** @var string */
-    private $currentReleaseType = 'Pre-alpha';
+    private $currentReleaseType = '';
 
 
     /**
@@ -145,7 +143,6 @@ class ProjectVersionsCommit extends Command
     {
         parent::__construct();
         $this->projectInfoFile = base_path() . '/' . $this->projectInfoFile;
-        $this->vcsPath = env('VCS_PATH') ?? env('SVN_PATH');
         $this->vcsType = strtolower(config('settings.vcs_type', 'git'));
     }
 
@@ -158,8 +155,6 @@ class ProjectVersionsCommit extends Command
     public function handle()
     {
         $this->getParams();
-        if (!$this->vcsPath)
-            throw new Exception('env variable VCS_PATH is absent or empty');
 
         if (file_exists($this->projectInfoFile)) {
             $this->parseProjectInfoFile();
