@@ -214,8 +214,8 @@ class ProjectVersionsCommit extends Command
         if (!$currentBranch)
             throw new Exception("Current branch is empty");
 
-        if (!preg_match('/master|main/i', $currentBranch))
-            throw new Exception("Current branch must contain master or main");
+        if (!preg_match('/master|main|test/i', $currentBranch))
+            throw new Exception("Current branch must contain master main or test");
 
         /* коммит в текущую ветку */
         $command = 'git add ./';
