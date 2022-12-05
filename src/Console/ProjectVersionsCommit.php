@@ -166,7 +166,7 @@ class ProjectVersionsCommit extends Command
             if ($this->vcsType == 'svn')
                 throw new Exception("Current SVN branch must be trunk if you want to make release tag");
             else
-                throw new Exception("Current GIT branch must contain master or main if you want to make release tag");
+                throw new Exception("Current GIT branch must contain master, main or test if you want to make release tag");
 
         $this->projectInfo['Project'] = config('app.name');
         $this->projectInfo['Description'] = (string)$this->description;
@@ -214,8 +214,8 @@ class ProjectVersionsCommit extends Command
         if (!$currentBranch)
             throw new Exception("Current branch is empty");
 
-        if (!preg_match('/master|main|test/i', $currentBranch))
-            throw new Exception("Current branch must contain master main or test");
+//        if (!preg_match('/master|main|test/i', $currentBranch))
+//            throw new Exception("Current branch must contain master main or test");
 
         /* коммит в текущую ветку */
         $command = 'git add ./';
@@ -422,7 +422,7 @@ class ProjectVersionsCommit extends Command
             if (empty($error)) {
                 $currentBranch = trim(current($rows));
 //                return in_array($currentBranch, ['master', 'main']);
-                return preg_match('/master|main/i', $currentBranch);
+                return preg_match('/master|main|test/i', $currentBranch);
             }
         }
 
